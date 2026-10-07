@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Zotero as your archive</title>
+<link rel="stylesheet" href="page.css">
+<link rel="stylesheet" href="archive.css">
+<script defer src="archive.js"></script>
+</head>
+<body>
+<header class="za-bar" id="za-bar">
+  <span class="za-field">
+    <span id="za-bar-library-label"></span>
+    <span id="za-library"></span>
+  </span>
+  <label class="za-field">
+    <span id="za-bar-themes-label"></span>
+    <input id="za-themes" type="number" min="2" max="8" step="1" size="2">
+  </label>
+  <label class="za-field">
+    <span id="za-bar-subthemes-label"></span>
+    <input id="za-subthemes" type="number" min="2" max="200" step="1" size="3">
+  </label>
+  <label class="za-field za-check" id="za-bar-label" hidden>
+    <input id="za-label" type="checkbox">
+    <span id="za-bar-label-label"></span>
+  </label>
+  <label class="za-field za-check">
+    <input id="za-refit" type="checkbox">
+    <span id="za-bar-refit-label"></span>
+  </label>
+  <button type="button" id="za-build" class="za-primary"></button>
+  <span class="za-field" id="za-bar-export" hidden>
+    <span id="za-export-kind"></span>
+    <button type="button" id="za-export"></button>
+  </span>
+  <span class="za-status" id="za-status" role="status" aria-live="polite"></span>
+</header>
+<main id="za-main">
+  <section class="za-empty" id="za-empty"></section>
+  <div id="za-page" hidden></div>
+</main>
+</body>
+</html>

@@ -1,0 +1,21 @@
+zotero-archive-menu-open =
+    .label = Zotero as your archive…
+
+zotero-archive-prefs-title = Zotero as your archive
+zotero-archive-prefs-intro = Everything runs on this computer. The models run either in Ollama, a free application that serves language models locally, or inside Zotero itself.
+zotero-archive-prefs-ollama-url = Ollama address
+zotero-archive-prefs-engine = Embedding engine
+    .label = Embedding engine
+zotero-archive-prefs-engine-ollama =
+    .label = Ollama (recommended: fast)
+zotero-archive-prefs-engine-local =
+    .label = Inside Zotero (no other software, slower)
+zotero-archive-prefs-engine-hint = The engine turns each reference into a vector. Ollama is a separate application; the engine inside Zotero downloads a model once (about 120 MB) and runs it in Zotero.
+zotero-archive-prefs-local-model = Model inside Zotero
+zotero-archive-prefs-local-model-hint = A sentence-embedding model of the Hugging Face Hub in ONNX format, for example Xenova/paraphrase-multilingual-MiniLM-L12-v2 (recommended) or Xenova/paraphrase-multilingual-mpnet-base-v2 (the Python version’s model, three times slower).
+zotero-archive-prefs-embed-model = Ollama embedding model
+zotero-archive-prefs-embed-model-hint = “paraphrase-multilingual” is recommended; install it with: ollama pull paraphrase-multilingual
+zotero-archive-prefs-label-model = Model naming the themes (optional)
+zotero-archive-prefs-label-model-hint = For example qwen3:8b. Leave empty to label the themes with their most distinctive words.
+zotero-archive-prefs-label-language = Language of the names
+zotero-archive-prefs-label-language-hint = A language code (fr, en, de…) or name. Empty: the language of the page.

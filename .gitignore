@@ -1,0 +1,6 @@
+node_modules/
+build/
+*.xpi
+.DS_Store
+# A development profile, if you keep it next to the code
+.zotero-dev/

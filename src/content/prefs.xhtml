@@ -1,0 +1,53 @@
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      onload="ZoteroArchivePrefs.init()">
+  <groupbox>
+    <label><html:h2 data-l10n-id="zotero-archive-prefs-title"/></label>
+    <description data-l10n-id="zotero-archive-prefs-intro" style="max-width: 60em"/>
+
+    <hbox align="center" style="margin-top: 8px">
+      <label data-l10n-id="zotero-archive-prefs-ollama-url" control="zotero-archive-ollama-url"/>
+      <html:input id="zotero-archive-ollama-url" type="text" style="flex: 1; max-width: 28em"
+                  preference="extensions.zotero.zoteroArchive.ollamaUrl"/>
+    </hbox>
+
+    <hbox align="center" style="margin-top: 8px">
+      <label data-l10n-id="zotero-archive-prefs-engine" control="zotero-archive-engine"/>
+      <menulist id="zotero-archive-engine" preference="extensions.zotero.zoteroArchive.embedEngine">
+        <menupopup>
+          <menuitem value="ollama" data-l10n-id="zotero-archive-prefs-engine-ollama"/>
+          <menuitem value="local" data-l10n-id="zotero-archive-prefs-engine-local"/>
+        </menupopup>
+      </menulist>
+    </hbox>
+    <description class="zotero-archive-hint" data-l10n-id="zotero-archive-prefs-engine-hint" style="max-width: 60em"/>
+
+    <hbox align="center" style="margin-top: 8px">
+      <label data-l10n-id="zotero-archive-prefs-local-model" control="zotero-archive-local-model"/>
+      <html:input id="zotero-archive-local-model" type="text" style="flex: 1; max-width: 28em"
+                  preference="extensions.zotero.zoteroArchive.localModel"/>
+    </hbox>
+    <description class="zotero-archive-hint" data-l10n-id="zotero-archive-prefs-local-model-hint" style="max-width: 60em"/>
+
+    <hbox align="center" style="margin-top: 8px">
+      <label data-l10n-id="zotero-archive-prefs-embed-model" control="zotero-archive-embed-model"/>
+      <html:input id="zotero-archive-embed-model" type="text" style="flex: 1; max-width: 28em"
+                  preference="extensions.zotero.zoteroArchive.embedModel"/>
+    </hbox>
+    <description class="zotero-archive-hint" data-l10n-id="zotero-archive-prefs-embed-model-hint" style="max-width: 60em"/>
+
+    <hbox align="center" style="margin-top: 8px">
+      <label data-l10n-id="zotero-archive-prefs-label-model" control="zotero-archive-label-model"/>
+      <html:input id="zotero-archive-label-model" type="text" style="flex: 1; max-width: 28em"
+                  preference="extensions.zotero.zoteroArchive.labelModel"/>
+    </hbox>
+    <description class="zotero-archive-hint" data-l10n-id="zotero-archive-prefs-label-model-hint" style="max-width: 60em"/>
+
+    <hbox align="center" style="margin-top: 8px">
+      <label data-l10n-id="zotero-archive-prefs-label-language" control="zotero-archive-label-language"/>
+      <html:input id="zotero-archive-label-language" type="text" style="flex: 1; max-width: 12em"
+                  preference="extensions.zotero.zoteroArchive.labelLanguage"/>
+    </hbox>
+    <description class="zotero-archive-hint" data-l10n-id="zotero-archive-prefs-label-language-hint" style="max-width: 60em"/>
+  </groupbox>
+</vbox>

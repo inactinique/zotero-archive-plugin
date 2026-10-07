@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "Zotero as your archive",
+  "version": "0.0.0",
+  "description": "Read your library as the archive of your intellectual interests: themes, followed along the dates references were added.",
+  "author": "Frédéric Clavert",
+  "homepage_url": "https://github.com/inactinique/zotero-archive-plugin",
+  "icons": {
+    "48": "content/icons/icon.svg",
+    "96": "content/icons/icon.svg"
+  },
+  "applications": {
+    "zotero": {
+      "id": "zotero-archive@inactinique.net",
+      "update_url": "https://raw.githubusercontent.com/inactinique/zotero-archive-plugin/main/updates.json",
+      "strict_min_version": "7.0",
+      "strict_max_version": "10.0.*"
+    }
+  }
+}

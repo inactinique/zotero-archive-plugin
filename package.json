@@ -1,0 +1,29 @@
+{
+  "name": "zotero-archive-plugin",
+  "version": "0.1.0",
+  "description": "Read a Zotero library as the archive of its owner's intellectual interests — a Zotero plugin",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "author": "Frédéric Clavert <frederic.clavert@uni.lu>",
+  "repository": "https://github.com/inactinique/zotero-archive-plugin",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "node --test test/*.test.js",
+    "dev": "node scripts/dev.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@fluent/bundle": "0.19.1",
+    "@huggingface/transformers": "4.3.1",
+    "stopwords-iso": "1.1.0",
+    "umap-js": "1.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "jsdom": "29.1.1"
+  }
+}

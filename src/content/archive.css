@@ -1,0 +1,56 @@
+/* The window around the page: a toolbar, then the page itself. */
+html { background: #f9f9f7; }
+@media (prefers-color-scheme: dark) { html { background: #0d0d0d; } }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13px; color: #0b0b0b; }
+@media (prefers-color-scheme: dark) { body { color: #fff; } }
+
+.za-bar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+  padding: 10px 16px; border-bottom: 1px solid rgba(128, 128, 128, .25);
+  background: #fcfcfb;
+}
+@media (prefers-color-scheme: dark) { .za-bar { background: #1a1a19; } }
+.za-field { display: inline-flex; align-items: center; gap: 8px; }
+.za-field[hidden] { display: none; }
+.za-check { gap: 6px; }
+.za-bar select, .za-bar input { font: inherit; padding: 3px 6px; border-radius: 6px; border: 1px solid #c3c2b7; background: inherit; color: inherit; }
+.za-bar button { font: inherit; padding: 5px 14px; border-radius: 7px; border: 1px solid #c3c2b7; background: inherit; color: inherit; cursor: pointer; }
+.za-bar button.za-primary { background: #0b0b0b; color: #fcfcfb; border-color: #0b0b0b; }
+@media (prefers-color-scheme: dark) { .za-bar button.za-primary { background: #fff; color: #0d0d0d; border-color: #fff; } }
+.za-bar button:disabled { opacity: .5; cursor: default; }
+.za-status { color: #52514e; font-variant-numeric: tabular-nums; }
+@media (prefers-color-scheme: dark) { .za-status { color: #c3c2b7; } }
+.za-status.error { color: #c0392b; }
+
+main { max-width: 1180px; margin: 0 auto; padding: 28px 16px 48px; }
+.za-empty { color: #52514e; max-width: 70ch; line-height: 1.5; }
+.za-empty h1 { font-size: 22px; margin: 0 0 10px; color: inherit; }
+@media (prefers-color-scheme: dark) { .za-empty { color: #c3c2b7; } }
+
+/* Dropdowns (see dropdown.js): a button and a list, in both colour schemes */
+.za-dropdown { position: relative; display: inline-block; max-width: 100%; }
+.za-dropdown-button {
+  display: inline-flex; align-items: center; gap: 8px; max-width: 44ch;
+  font: inherit; padding: 3px 8px; border-radius: 6px; border: 1px solid #c3c2b7;
+  background: #fcfcfb; color: inherit; cursor: pointer;
+}
+.za-dropdown-button:focus-visible { outline: 2px solid #2a78d6; outline-offset: 1px; }
+.za-dropdown-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.za-dropdown-caret { color: #898781; font-size: 11px; }
+.za-dropdown-list {
+  position: absolute; left: 0; top: calc(100% + 4px); z-index: 20;
+  min-width: 100%; max-height: 320px; overflow-y: auto; margin: 0; padding: 4px;
+  list-style: none; background: #fcfcfb; color: #0b0b0b;
+  border: 1px solid rgba(11, 11, 11, .15); border-radius: 8px; box-shadow: 0 6px 24px rgba(0, 0, 0, .16);
+}
+.za-dropdown-list li { padding: 4px 10px; border-radius: 5px; white-space: nowrap; cursor: pointer; }
+.za-dropdown-list li.active { background: #e1e0d9; }
+.za-dropdown-list li[aria-selected="true"] { font-weight: 600; }
+@media (prefers-color-scheme: dark) {
+  .za-dropdown-button { background: #1a1a19; border-color: #383835; }
+  .za-dropdown-list { background: #1a1a19; color: #fff; border-color: rgba(255, 255, 255, .12); }
+  .za-dropdown-list li.active { background: #2c2c2a; }
+}
+/* Inside the page, the period picker sits among chips: keep it at their size. */
+.zotero-archive .selection .za-dropdown-button { font-size: 13px; }
