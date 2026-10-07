@@ -10,7 +10,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "watch": "node scripts/build.mjs --watch",
-    "test": "node --test test/*.test.js",
+    "test": "node --test \"test/*.test.js\"",
     "dev": "node scripts/dev.mjs"
   },
   "engines": {
@@ -23,6 +23,7 @@
     "umap-js": "1.4.0"
   },
   "devDependencies": {
+    "adm-zip": "0.6.1",
     "esbuild": "0.28.2",
     "jsdom": "29.1.1"
   }

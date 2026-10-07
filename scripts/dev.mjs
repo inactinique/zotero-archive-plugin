@@ -28,7 +28,19 @@ const option = (name) => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 const HOME = path.resolve(option("--home") || process.env.ZOTERO_ARCHIVE_DEV_HOME || path.join(os.homedir(), ".zotero-archive-dev"));
-const ZOTERO = option("--zotero") || process.env.ZOTERO_BINARY || "/Applications/Zotero.app/Contents/MacOS/zotero";
+// Where Zotero usually is, per platform; --zotero or ZOTERO_BINARY override it.
+const USUAL_BINARIES = {
+  darwin: ["/Applications/Zotero.app/Contents/MacOS/zotero"],
+  win32: [
+    path.join(process.env.ProgramFiles || "C:\\Program Files", "Zotero", "zotero.exe"),
+    path.join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "Zotero", "zotero.exe"),
+    path.join(process.env.LOCALAPPDATA || "", "Zotero", "zotero.exe"),
+  ],
+  linux: ["/usr/lib/zotero/zotero", "/opt/zotero/zotero", "/usr/local/bin/zotero", "/usr/bin/zotero", path.join(os.homedir(), "Zotero_linux-x86_64", "zotero")],
+};
+const ZOTERO = option("--zotero") || process.env.ZOTERO_BINARY
+  || (USUAL_BINARIES[process.platform] || []).find((p) => existsSync(p))
+  || (USUAL_BINARIES[process.platform] || ["zotero"])[0];
 const PROFILE = path.join(HOME, "profile");
 const DATA = path.join(HOME, "data");
 const PID = path.join(HOME, "zotero.pid");
@@ -43,7 +55,7 @@ function stop() {
     const found = execFileSync("pgrep", ["-f", `zotero -profile ${PROFILE}`], { encoding: "utf8" });
     for (const line of found.split("\n")) if (line.trim()) pids.add(Number(line));
   } catch {
-    // pgrep exits 1 when nothing matches
+    // pgrep exits 1 when nothing matches, and does not exist on Windows
   }
   let stopped = false;
   for (const pid of pids) {
@@ -102,6 +114,8 @@ function prepare() {
     "extensions.zotero.zoteroArchive.devRefit": argv.includes("--refit"),
     // --palette normal|colorblind: the colours of the themes.
     ...(option("--palette") ? { "extensions.zotero.zoteroArchive.palette": option("--palette") } : {}),
+    // --collection TEXT: preselect the first collection whose path contains TEXT.
+    "extensions.zotero.zoteroArchive.devCollection": option("--collection") || "",
     // --engine local|ollama: which embedding engine the window uses.
     ...(option("--engine") ? { "extensions.zotero.zoteroArchive.embedEngine": option("--engine") } : {}),
     "extensions.zotero.debug.log": false,

@@ -1,7 +1,8 @@
 // Where the plugin keeps what it computes: one folder per library under
 // Zotero's data directory, <data directory>/zotero-archive/<libraryID>/.
 //
-//   embeddings.json + embeddings.bin   the cached vectors (digest -> vector)
+//   embeddings-<model>.json + .bin     the cached vectors (digest -> vector), shared by
+//                                      the library's collections, which live in collections/<key>/
 //   model.json                         the fitted themes, reused across runs
 //   themes.json                        the labels, which the user may edit
 //
@@ -9,8 +10,9 @@
 
 /* global IOUtils, PathUtils */
 
-export function storePath(Zotero, libraryID) {
-  return PathUtils.join(Zotero.DataDirectory.dir, "zotero-archive", String(libraryID));
+export function storePath(Zotero, libraryID, collectionKey = null) {
+  const base = PathUtils.join(Zotero.DataDirectory.dir, "zotero-archive", String(libraryID));
+  return collectionKey ? PathUtils.join(base, "collections", String(collectionKey)) : base;
 }
 
 export function createStore(dir) {

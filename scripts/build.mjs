@@ -7,7 +7,7 @@
 
 import { context } from "esbuild";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, watch, writeFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import AdmZip from "adm-zip";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -74,7 +74,7 @@ async function main() {
     outdir: OUT,
     bundle: true,
     format: "iife",
-    target: ["firefox140"],
+    target: ["firefox115"], // Zotero 7.0 is built on Firefox 115
     platform: "browser",
     sourcemap: args.has("--watch") ? "inline" : false,
     minify: false,
@@ -92,7 +92,7 @@ async function main() {
     // Zotero has no WebGPU: the plain WebAssembly build of the ONNX runtime is enough.
     alias: { "onnxruntime-web/webgpu": "onnxruntime-web" },
     format: "esm",
-    target: ["firefox140"],
+    target: ["firefox115"],
     platform: "browser",
     sourcemap: false,
     minify: true,
@@ -122,7 +122,9 @@ async function main() {
   if (args.has("--xpi")) {
     const xpi = path.join(ROOT, `zotero-archive-${pkg.version}.xpi`);
     rmSync(xpi, { force: true });
-    execFileSync("zip", ["-r", "-X", "-q", xpi, "."], { cwd: OUT, stdio: "inherit" });
+    const zip = new AdmZip();
+    zip.addLocalFolder(OUT);
+    zip.writeZip(xpi);
     console.log(`wrote ${path.relative(ROOT, xpi)}`);
   }
 }

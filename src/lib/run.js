@@ -63,24 +63,26 @@ export async function loadOrFit(store, items, vectors, params, refit, { onStatus
 }
 
 /**
- * Analyse a library. Returns what the page needs: items, their sub-theme,
- * the described groups and their labels.
+ * Analyse a library, or one of its collections. Returns what the page needs:
+ * items, their sub-theme, the described groups and their labels.
  *
  * `engine.embed(texts)` embeds texts; `propose(model, description, language)`
- * names a group; `store` persists the cache, the model and the labels.
- * `onStatus(step, detail)` and `onProgress(step, done, total)` report progress.
+ * names a group; `store` persists the model and the labels of this scope, and
+ * `vectorStore` (the library's store, by default the same) the vector cache,
+ * which collections of one library share. `onStatus(step, detail)` and
+ * `onProgress(step, done, total)` report progress.
  */
-export async function run({ library, items, options, store, engine, propose, onStatus, onProgress }) {
+export async function run({ library, collection = null, items, options, store, vectorStore = store, engine, propose, onStatus, onProgress }) {
   const nRead = items.length;
   items = excludeCollections(items, options.exclude);
-  await onStatus?.("read", { library: library.name, n: items.length, excluded: nRead - items.length });
+  await onStatus?.("read", { library: library.name, collection: collection?.path || null, n: items.length, excluded: nRead - items.length });
   if (items.length < MIN_ITEMS) throw new TooFewItems(items.length);
 
   const texts = items.map(itemText);
   await onStatus?.("embedding");
   // One cache per model, so that switching engines does not throw vectors away.
   const cacheName = "embeddings-" + options.modelName.replace(/[^\w.-]+/g, "_");
-  const cache = await store.readVectors(cacheName);
+  const cache = await vectorStore.readVectors(cacheName);
   const { vectors, digests, computed } = await embedTexts(texts, {
     engine,
     modelName: options.modelName,
@@ -89,7 +91,7 @@ export async function run({ library, items, options, store, engine, propose, onS
   });
   if (computed) {
     pruneCache(cache, digests);
-    await store.writeVectors(cacheName, cache);
+    await vectorStore.writeVectors(cacheName, cache);
   }
 
   await onStatus?.("themes");
@@ -99,6 +101,7 @@ export async function run({ library, items, options, store, engine, propose, onS
     subthemes: options.nSubthemes,
     exclude: [...options.exclude].sort(),
     library: library.id,
+    collection: collection ? collection.key : null,
   };
   const { model, sub, fitted } = await loadOrFit(store, items, vectors, params, options.refit, {
     onStatus: (step, detail) => onStatus?.(step, detail),
@@ -120,5 +123,5 @@ export async function run({ library, items, options, store, engine, propose, onS
   });
   await store.writeJSON("themes.json", themesDocument(themes, subthemes, labels, items, options.language));
 
-  return { library, items, sub: Array.from(sub), themes, subthemes, labels, fitted };
+  return { library, collection, items, sub: Array.from(sub), themes, subthemes, labels, fitted };
 }

@@ -75,6 +75,7 @@ that is your engine). A window opens with a toolbar:
 | Control | Meaning |
 | --- | --- |
 | Library | your personal library or one of your groups |
+| Collection | the whole library, or one of its collections, sub-collections included (at least 60 references) |
 | Themes | how many broad themes to compute (2 to 20; beyond about ten, colours become hard to tell apart) |
 | Sub-themes | how many fine-grained groups the themes are built from (default 40) |
 | Name the themes with … | shown when a naming model is set in the settings: ask that model for the labels |
@@ -126,7 +127,9 @@ the themes are recomputed at the next analysis.
 ### Where the results are kept
 
 In Zotero's data directory, one folder per library:
-`<data directory>/zotero-archive/<libraryID>/`.
+`<data directory>/zotero-archive/<libraryID>/`, and one per analysed collection
+under it, `collections/<collectionKey>/`, which holds the collection's own
+themes and labels; the vectors are shared with the library.
 
 | File | Content |
 | --- | --- |
@@ -210,11 +213,16 @@ npm run dev -- --stop
 ```
 
 Options: `--home DIR` (where the profile and data live; default
-`~/.zotero-archive-dev`), `--autobuild` (analyse the first library as soon as
+`~/.zotero-archive-dev`), `--collection TEXT` (preselect a collection), `--autobuild` (analyse the first library as soon as
 the window opens), `--export-dir DIR` (write every export variant there after
 each analysis), `--open-export KIND` (open one of them in Zotero's viewer),
-`--engine local|ollama`, `--zotero PATH` (the Zotero binary). Zotero's debug
-output goes to `<home>/zotero.log`.
+`--engine local|ollama`, `--zotero PATH` (the Zotero binary; the usual locations
+on macOS, Windows and Linux are tried, and `ZOTERO_BINARY` is honoured). Zotero's
+debug output goes to `<home>/zotero.log`.
+
+The tests and the packaging run on macOS, Windows and Linux (see
+`.github/workflows/test.yml`); pushing a tag `v<version>` builds the XPI and
+attaches it to a GitHub release, where `updates.json` expects it.
 
 | Path | Role |
 | --- | --- |
@@ -302,6 +310,7 @@ si c’est votre moteur). Une fenêtre s’ouvre, avec une barre d’outils :
 | Commande | Sens |
 | --- | --- |
 | Bibliothèque | votre bibliothèque personnelle ou l’un de vos groupes |
+| Collection | toute la bibliothèque, ou l’une de ses collections, sous-collections comprises (60 références au moins) |
 | Thèmes | nombre de grands thèmes (de 2 à 20 ; au-delà d’une dizaine, les couleurs deviennent difficiles à distinguer) |
 | Sous-thèmes | nombre de groupes fins dont les thèmes sont faits (40 par défaut) |
 | Nommer les thèmes avec … | affiché quand un modèle de nommage est indiqué dans les préférences : lui demander les libellés |
@@ -354,7 +363,9 @@ recalculés à l’analyse suivante.
 ### Où sont conservés les résultats
 
 Dans le répertoire de données de Zotero, un dossier par bibliothèque :
-`<répertoire de données>/zotero-archive/<identifiant>/` — les vecteurs
+`<répertoire de données>/zotero-archive/<identifiant>/`, et un par collection
+analysée en dessous, `collections/<clé>/`, avec ses propres thèmes et libellés
+(les vecteurs sont partagés avec la bibliothèque) — les vecteurs
 (`embeddings-<modèle>.bin` et `.json`, une paire par modèle), les thèmes calculés (`model.json`) et
 les libellés (`themes.json`, avec `themes.json.bak`, la version précédente,
 conservée quand les thèmes sont recalculés). Le moteur intégré garde ses

@@ -1,9 +1,10 @@
-// Read the references of a library through the Zotero API.
+// Read the references of a library, or of one of its collections, through the
+// Zotero API.
 //
 // This is the counterpart of extract.py: the same fields, the same filters
 // (no notes, attachments or annotations, nothing in the trash, nothing without
 // a title), the same order (oldest addition first). `Zotero` is passed in so
-// that the function can be tested with a stand-in.
+// that the functions can be tested with a stand-in.
 
 const TAG_RE = /<[^>]+>/g;
 const SPACE_RE = /\s+/g;
@@ -57,6 +58,42 @@ export function collectionPaths(Zotero, libraryID) {
   return paths;
 }
 
+/** The collections of a library, with their full path, sorted by path. */
+export function listCollections(Zotero, libraryID) {
+  const paths = collectionPaths(Zotero, libraryID);
+  return Zotero.Collections.getByLibrary(libraryID, true)
+    .map((c) => ({
+      id: c.id,
+      key: c.key,
+      name: c.name,
+      parentID: c.parentID || null,
+      path: paths.get(c.id),
+      depth: paths.get(c.id).split(" / ").length - 1,
+    }))
+    .sort((a, b) => a.path.localeCompare(b.path, undefined, { sensitivity: "base" }));
+}
+
+/** A collection and all its descendants, as a set of ids. */
+export function collectionFamily(Zotero, libraryID, collectionID) {
+  const children = new Map();
+  for (const c of Zotero.Collections.getByLibrary(libraryID, true)) {
+    if (!c.parentID) continue;
+    if (!children.has(c.parentID)) children.set(c.parentID, []);
+    children.get(c.parentID).push(c.id);
+  }
+  const family = new Set([collectionID]);
+  const queue = [collectionID];
+  while (queue.length) {
+    for (const child of children.get(queue.pop()) || []) {
+      if (!family.has(child)) {
+        family.add(child);
+        queue.push(child);
+      }
+    }
+  }
+  return family;
+}
+
 function field(item, name, unformatted = false) {
   try {
     return item.getField(name, unformatted, true) || "";
@@ -66,19 +103,31 @@ function field(item, name, unformatted = false) {
 }
 
 /**
- * All bibliographic references of a library, oldest addition first.
+ * All bibliographic references of a library, oldest addition first; with
+ * `collectionID`, only those in that collection or one of its sub-collections.
  *
  * Each reference carries the fields the analysis and the page need:
  * id, key, itemType, dateAdded (ISO 8601, UTC), title, abstract, year, doi,
  * creators (a display string), tags and collections (full paths).
  */
-export async function loadItems(Zotero, libraryID, { onProgress } = {}) {
+export async function loadItems(Zotero, libraryID, { collectionID = null, onProgress } = {}) {
   const library = Zotero.Libraries.get(libraryID);
   const all = await Zotero.Items.getAll(libraryID, true, false);
-  const regular = all.filter((it) => it.isRegularItem());
+  let regular = all.filter((it) => it.isRegularItem());
+  const paths = collectionPaths(Zotero, libraryID);
+
+  let collection = null;
+  if (collectionID) {
+    const found = Zotero.Collections.get(collectionID);
+    if (!found) throw new Error(`collection ${collectionID} not found`);
+    const family = collectionFamily(Zotero, libraryID, collectionID);
+    await Zotero.Items.loadDataTypes(regular, ["collections"]);
+    regular = regular.filter((it) => it.getCollections().some((id) => family.has(id)));
+    collection = { id: found.id, key: found.key, name: found.name, path: paths.get(found.id) };
+  }
+
   onProgress?.(0, regular.length);
   await Zotero.Items.loadDataTypes(regular, ["itemData", "creators", "tags", "collections"]);
-  const paths = collectionPaths(Zotero, libraryID);
 
   const items = [];
   for (const it of regular) {
@@ -113,6 +162,7 @@ export async function loadItems(Zotero, libraryID, { onProgress } = {}) {
       name: library.name,
       groupID: library.libraryType === "group" ? library.groupID : null,
     },
+    collection,
     items,
   };
 }

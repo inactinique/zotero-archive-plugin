@@ -2,7 +2,7 @@
 // through the Zotero API, talks to Ollama on this machine, and keeps its
 // results in Zotero's data directory.
 
-import { listLibraries, loadItems, selectLink } from "../lib/extract.js";
+import { listCollections, listLibraries, loadItems, selectLink } from "../lib/extract.js";
 import { DEFAULT_LOCAL_MODEL, DEFAULT_MODEL } from "../lib/embed.js";
 import { languageKey, propose as proposeLabel } from "../lib/labels.js";
 import * as ollama from "../lib/ollama.js";
@@ -24,6 +24,8 @@ const lang = (Zotero.locale || "en").toLowerCase().startsWith("fr") ? "fr" : "en
 const UI = {
   fr: {
     library: "Bibliothèque",
+    collection: "Collection",
+    wholeLibrary: "Toute la bibliothèque",
     themes: "Thèmes",
     subthemes: "Sous-thèmes",
     label: (model) => `Nommer les thèmes avec ${model}`,
@@ -31,7 +33,7 @@ const UI = {
     build: "Analyser",
     building: "Analyse en cours…",
     intro: "Choisissez une bibliothèque, puis lancez l’analyse. Tout se passe sur cet ordinateur : la bibliothèque est lue par Zotero, les modèles tournent dans Ollama ou dans Zotero même, selon les préférences.",
-    read: ({ n, excluded }) => `${n} références${excluded ? ` (${excluded} écartées)` : ""}`,
+    read: ({ n, excluded, collection }) => `${n} références${collection ? ` dans ${collection}` : ""}${excluded ? ` (${excluded} écartées)` : ""}`,
     embedding: "Représentation des références…",
     embeddingProgress: (done, total) => `Représentation des références : ${done}/${total}`,
     themesStep: "Thèmes…",
@@ -67,6 +69,8 @@ const UI = {
   },
   en: {
     library: "Library",
+    collection: "Collection",
+    wholeLibrary: "Whole library",
     themes: "Themes",
     subthemes: "Sub-themes",
     label: (model) => `Name the themes with ${model}`,
@@ -74,7 +78,7 @@ const UI = {
     build: "Analyse",
     building: "Analysing…",
     intro: "Choose a library, then run the analysis. Everything happens on this computer: Zotero reads the library, the models run in Ollama or inside Zotero itself, as set in the preferences.",
-    read: ({ n, excluded }) => `${n} references${excluded ? ` (${excluded} set aside)` : ""}`,
+    read: ({ n, excluded, collection }) => `${n} references${collection ? ` in ${collection}` : ""}${excluded ? ` (${excluded} set aside)` : ""}`,
     embedding: "Representing the references…",
     embeddingProgress: (done, total) => `Representing the references: ${done}/${total}`,
     themesStep: "Themes…",
@@ -127,6 +131,7 @@ const pref = (name) => {
 
 let current = null; // { result, options, store, view, keyToId }
 let libraryPicker = null;
+let collectionPicker = null;
 let exportPicker = null;
 let palettePicker = null;
 
@@ -150,10 +155,24 @@ function explain(error) {
 async function fillLibraries() {
   const libraries = await listLibraries(Zotero);
   const items = libraries.map((lib) => [String(lib.id), `${lib.name} (${lib.nItems})`]);
-  libraryPicker = createDropdown({ items, value: items[0]?.[0] ?? "", label: T.library });
+  libraryPicker = createDropdown({ items, value: items[0]?.[0] ?? "", label: T.library, onChange: fillCollections });
   $("za-library").replaceChildren(libraryPicker.element);
+  fillCollections();
   // While developing (scripts/dev.mjs --open-dropdown): show the list at once.
   if (pref("devOpenDropdown") === true) libraryPicker.open();
+}
+
+// The collections of the chosen library: the whole library, or one of them
+// (with its sub-collections).
+function fillCollections() {
+  const libraryID = Number(libraryPicker?.value);
+  const collections = Number.isFinite(libraryID) ? listCollections(Zotero, libraryID) : [];
+  const items = [["", T.wholeLibrary], ...collections.map((c) => [String(c.id), c.path])];
+  // While developing (scripts/dev.mjs --collection TEXT): preselect the first matching path.
+  const wanted = pref("devCollection");
+  const preset = typeof wanted === "string" && wanted ? collections.find((c) => c.path.toLowerCase().includes(wanted.toLowerCase())) : null;
+  collectionPicker = createDropdown({ items, value: preset ? String(preset.id) : "", label: T.collection });
+  $("za-collection").replaceChildren(collectionPicker.element);
 }
 
 // The page's own period picker, built with the same control.
@@ -192,8 +211,12 @@ async function build() {
     if (options.engine === "ollama") await ollama.checkModel(options.modelName, options.ollamaUrl);
     if (options.labelModel) await ollama.checkModel(options.labelModel, options.ollamaUrl);
 
-    const { library, items } = await loadItems(Zotero, libraryID);
-    const store = createStore(storePath(Zotero, library.id));
+    const collectionID = Number(collectionPicker?.value) || null;
+    const { library, collection, items } = await loadItems(Zotero, libraryID, { collectionID });
+    // Themes and labels are kept per collection; the vectors are shared by the library.
+    const store = createStore(storePath(Zotero, library.id, collection?.key));
+    const vectorStore = collection ? createStore(storePath(Zotero, library.id)) : store;
+    options.name = collection ? `${library.name} › ${collection.path}` : null;
     const engine = options.engine === "local" ? await localEngine(options.modelName) : { embed: (texts) => ollama.embed(options.modelName, texts, options.ollamaUrl) };
     const propose = (model, description, language) => proposeLabel(model, description, { url: options.ollamaUrl, language });
     const onStatus = (step, detail) => {
@@ -217,7 +240,7 @@ async function build() {
     };
     let result;
     try {
-      result = await run({ library, items, options, store, engine, propose, onStatus, onProgress });
+      result = await run({ library, collection, items, options, store, vectorStore, engine, propose, onStatus, onProgress });
     } finally {
       await engine.dispose?.();
     }
@@ -420,6 +443,7 @@ async function devExport() {
 function setupToolbar() {
   document.documentElement.lang = lang;
   $("za-bar-library-label").textContent = T.library;
+  $("za-bar-collection-label").textContent = T.collection;
   $("za-bar-themes-label").textContent = T.themes;
   $("za-bar-subthemes-label").textContent = T.subthemes;
   $("za-bar-refit-label").textContent = T.refit;
