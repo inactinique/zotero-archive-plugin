@@ -75,10 +75,11 @@ that is your engine). A window opens with a toolbar:
 | Control | Meaning |
 | --- | --- |
 | Library | your personal library or one of your groups |
-| Themes | how many broad themes to compute (2 to 8: beyond that, colours cannot be told apart) |
+| Themes | how many broad themes to compute (2 to 20; beyond about ten, colours become hard to tell apart) |
 | Sub-themes | how many fine-grained groups the themes are built from (default 40) |
 | Name the themes with … | shown when a naming model is set in the settings: ask that model for the labels |
-| Recompute the themes | start from scratch instead of reusing the previous themes |
+| Recompute the themes | start from scratch instead of reusing the previous themes; the box unticks itself after the run |
+| Palette | the colours of the themes: regular, or colour-blind safe (Paul Tol's discrete rainbow, from purple for the oldest theme to red for the most recent) |
 | Analyse | run the analysis |
 | Export… | save the page as a file (see below) |
 
@@ -116,6 +117,7 @@ In *Zotero › Settings › Zotero as your archive*:
 | Ollama embedding model | `paraphrase-multilingual` | the Ollama model that turns each reference into a vector |
 | Model naming the themes | empty | an Ollama model asked to propose a label for each group; empty: labels are the most distinctive words |
 | Language of the names | empty | language asked of that model (code or name); empty: the language of the page |
+| Colours of the themes | regular | regular palette, or the colour-blind safe one; also chosen from the window, and applied to exported pages |
 
 The page follows Zotero's language: French if Zotero is in French, English
 otherwise. Changing the embedding engine or its model changes the vectors, so
@@ -222,7 +224,7 @@ output goes to `<home>/zotero.log`.
 | `src/content/prefs.xhtml`, `prefs.js` | the preference pane |
 | `src/content/page.html`, `page.css` | the page's markup and styles, generated from the Python template |
 | `src/page/page.js`, `standalone.js` | the page's script, and the entry point of the exported page |
-| `src/lib/` | the analysis, free of any Zotero dependency, tested in `test/` |
+| `src/lib/` | the analysis, free of any Zotero dependency, tested in `test/`; `palette.js` holds the two palettes |
 | `src/engine/local.js` | the engine inside Zotero (transformers.js), bundled on its own and loaded on demand; the ONNX runtime's WebAssembly files are copied from `node_modules` at build time |
 | `scripts/build.mjs`, `dev.mjs`, `sync-template.mjs` | build, development Zotero, refresh of the page from the Python project |
 
@@ -300,10 +302,11 @@ si c’est votre moteur). Une fenêtre s’ouvre, avec une barre d’outils :
 | Commande | Sens |
 | --- | --- |
 | Bibliothèque | votre bibliothèque personnelle ou l’un de vos groupes |
-| Thèmes | nombre de grands thèmes (de 2 à 8 : au-delà, les couleurs ne se distinguent plus) |
+| Thèmes | nombre de grands thèmes (de 2 à 20 ; au-delà d’une dizaine, les couleurs deviennent difficiles à distinguer) |
 | Sous-thèmes | nombre de groupes fins dont les thèmes sont faits (40 par défaut) |
 | Nommer les thèmes avec … | affiché quand un modèle de nommage est indiqué dans les préférences : lui demander les libellés |
-| Recalculer les thèmes | repartir de zéro au lieu de reprendre les thèmes précédents |
+| Recalculer les thèmes | repartir de zéro au lieu de reprendre les thèmes précédents ; la case se décoche après l’analyse |
+| Palette | les couleurs des thèmes : normale, ou adaptée au daltonisme (l’arc-en-ciel discret de Paul Tol, du violet pour le thème le plus ancien au rouge pour le plus récent) |
 | Analyser | lancer l’analyse |
 | Exporter… | enregistrer la page dans un fichier (voir plus bas) |
 
@@ -342,6 +345,7 @@ Dans *Zotero › Paramètres › Zotero comme archive* :
 | Modèle de représentation d’Ollama | `paraphrase-multilingual` | le modèle Ollama qui transforme chaque référence en vecteur |
 | Modèle qui nomme les thèmes | vide | un modèle Ollama à qui demander un libellé pour chaque groupe ; vide : les libellés sont les mots les plus caractéristiques |
 | Langue des noms proposés | vide | langue demandée à ce modèle (code ou nom) ; vide : la langue de la page |
+| Couleurs des thèmes | normale | palette normale, ou adaptée au daltonisme ; se choisit aussi dans la fenêtre, et s’applique aux pages exportées |
 
 La page suit la langue de Zotero : français si Zotero est en français, anglais
 sinon. Changer de moteur ou de modèle change les vecteurs : les thèmes sont

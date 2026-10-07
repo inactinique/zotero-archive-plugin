@@ -13,6 +13,7 @@ import { renderArchive } from "../page/page.js";
 import pageMarkup from "./page.html";
 import pageStyle from "./page.css";
 import { createDropdown } from "./dropdown.js";
+import { DEFAULT_PALETTE, PALETTE_NAMES, paletteCSS } from "../lib/palette.js";
 
 const { Zotero } = ChromeUtils.importESModule("chrome://zotero/content/zotero.mjs");
 
@@ -41,6 +42,10 @@ const UI = {
     labelling: ({ model }) => `Libellés proposés par ${model}…`,
     labellingProgress: (done, total) => `Libellés proposés par le modèle : ${done}/${total}`,
     done: (n, seconds) => `${n} références analysées en ${seconds} s`,
+    recomputed: (themes, subthemes) => ` · thèmes recalculés : ${themes} thèmes, ${subthemes} sous-thèmes`,
+    maxThemes: `${MAX_THEMES} thèmes au plus. Au-delà d’une dizaine, les couleurs deviennent difficiles à distinguer : le détail passe par les sous-thèmes.`,
+    palette: "Palette",
+    palettes: { normal: "Normale", colorblind: "Adaptée au daltonisme" },
     tooFew: (n) => `Il faut au moins ${MIN_ITEMS} références pour dégager des thèmes (${n} trouvées).`,
     unreachable: (url) => `Ollama ne répond pas à l’adresse ${url}. Lancez l’application Ollama, puis réessayez.`,
     missing: (model, available) => `Le modèle « ${model} » n’est pas installé dans Ollama (disponibles : ${available || "aucun"}). Installez-le avec « ollama pull ${model} ».`,
@@ -80,6 +85,10 @@ const UI = {
     labelling: ({ model }) => `Names proposed by ${model}…`,
     labellingProgress: (done, total) => `Names proposed by the model: ${done}/${total}`,
     done: (n, seconds) => `${n} references analysed in ${seconds} s`,
+    recomputed: (themes, subthemes) => ` · themes recomputed: ${themes} themes, ${subthemes} sub-themes`,
+    maxThemes: `${MAX_THEMES} themes at most. Beyond about ten, colours become hard to tell apart: sub-themes carry the detail.`,
+    palette: "Palette",
+    palettes: { normal: "Regular", colorblind: "Colour-blind safe" },
     tooFew: (n) => `At least ${MIN_ITEMS} references are needed to find themes (${n} found).`,
     unreachable: (url) => `Ollama does not answer at ${url}. Start the Ollama application, then try again.`,
     missing: (model, available) => `The model “${model}” is not installed in Ollama (available: ${available || "none"}). Install it with “ollama pull ${model}”.`,
@@ -119,6 +128,7 @@ const pref = (name) => {
 let current = null; // { result, options, store, view, keyToId }
 let libraryPicker = null;
 let exportPicker = null;
+let palettePicker = null;
 
 function status(text, error = false) {
   const el = $("za-status");
@@ -212,7 +222,8 @@ async function build() {
       await engine.dispose?.();
     }
     show(result, options, store);
-    status(T.done(result.items.length, ((Date.now() - t0) / 1000).toFixed(1)));
+    status(T.done(result.items.length, ((Date.now() - t0) / 1000).toFixed(1)) + (result.fitted ? T.recomputed(result.themes.length, result.subthemes.length) : ""));
+    $("za-refit").checked = false; // one recomputation per request, like --refit
     Zotero.debug(`[zotero-archive] done ${result.items.length} items, ${result.themes.length} themes, ${result.subthemes.length} sub-themes`);
     await devExport();
   } catch (error) {
@@ -266,6 +277,7 @@ function show(result, options, store) {
   const parsed = new DOMParser().parseFromString(pageMarkup.replace('lang="__LANG__"', `lang="${lang}"`), "text/html");
   const root = document.adoptNode(parsed.querySelector(".zotero-archive"));
   host.replaceChildren(root);
+  applyPalette(result.themes.length);
   host.hidden = false;
   $("za-empty").hidden = true;
   $("za-bar-export").hidden = false;
@@ -276,6 +288,30 @@ function show(result, options, store) {
     keyToId: new Map(result.items.map((it) => [it.key, it.id])),
     view: renderArchive(root, data, { onOpen: openInZotero, onRename: rename, editableHint: T.editableHint, select: pagePicker }),
   };
+}
+
+// ----- the palette -----
+
+function currentPalette() {
+  const name = pref("palette");
+  return PALETTE_NAMES.includes(name) ? name : DEFAULT_PALETTE;
+}
+
+// The colours are CSS variables on the page's root, written for the palette
+// and the number of themes in use; the page's own stylesheet is overridden.
+function applyPalette(nThemes) {
+  let style = document.getElementById("za-palette-style");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "za-palette-style";
+    document.head.append(style);
+  }
+  style.textContent = paletteCSS(currentPalette(), nThemes);
+}
+
+function choosePalette(name) {
+  Zotero.Prefs.set("zoteroArchive.palette", name);
+  if (current) applyPalette(current.result.themes.length);
 }
 
 // ----- renaming a theme or a sub-theme -----
@@ -323,7 +359,7 @@ async function assemblePage(kind) {
     .replace(/\{#/g, "{\\u0023");
   const script = await Zotero.File.getResourceAsync("chrome://zotero-archive/content/page.js");
   const body =
-    `<!-- zotero-archive:fragment -->\n<style>\n${pageStyle}\n</style>\n` +
+    `<!-- zotero-archive:fragment -->\n<style>\n${pageStyle}\n</style>\n<style>\n${paletteCSS(currentPalette(), current.result.themes.length)}\n</style>\n` +
     pageMarkup.replace('lang="__LANG__"', `lang="${lang}"`) +
     `\n<script id="za-data" type="application/json">${json}</script>\n<script>\n${script}\n</script>\n<!-- /zotero-archive:fragment -->\n`;
   if (fragment) return body;
@@ -391,7 +427,20 @@ function setupToolbar() {
   $("za-export").textContent = T.export;
   $("za-empty").textContent = T.intro;
   $("za-themes").value = String(Math.min(MAX_THEMES, Number(pref("themes")) || MAX_THEMES));
+  $("za-themes").title = T.maxThemes;
   $("za-subthemes").value = String(Number(pref("subthemes")) || 40);
+  // The limits are enforced as soon as a field is left, and explained.
+  const clamp = (input, min, max, explain) => () => {
+    const asked = Number(input.value);
+    const kept = Math.min(max, Math.max(min, asked || min));
+    if (kept !== asked) {
+      input.value = String(kept);
+      if (explain && asked > max) status(explain);
+    }
+  };
+  $("za-themes").addEventListener("change", clamp($("za-themes"), 2, MAX_THEMES, T.maxThemes));
+  $("za-subthemes").addEventListener("change", clamp($("za-subthemes"), 2, 200, null));
+  if (pref("devRefit") === true) $("za-refit").checked = true;
   const labelModel = (pref("labelModel") || "").trim();
   $("za-bar-label").hidden = !labelModel;
   if (labelModel) {
@@ -399,6 +448,14 @@ function setupToolbar() {
     $("za-label").checked = true;
   }
   exportPicker = createDropdown({ items: Object.entries(T.exportKinds), value: "private", label: T.export });
+  $("za-bar-palette-label").textContent = T.palette;
+  palettePicker = createDropdown({
+    items: PALETTE_NAMES.map((name) => [name, T.palettes[name]]),
+    value: currentPalette(),
+    onChange: choosePalette,
+    label: T.palette,
+  });
+  $("za-palette").replaceChildren(palettePicker.element);
   $("za-export-kind").replaceChildren(exportPicker.element);
   $("za-build").addEventListener("click", build);
   $("za-export").addEventListener("click", exportPage);

@@ -37,6 +37,17 @@
     <description class="zotero-archive-hint" data-l10n-id="zotero-archive-prefs-embed-model-hint" style="max-width: 60em"/>
 
     <hbox align="center" style="margin-top: 8px">
+      <label data-l10n-id="zotero-archive-prefs-palette" control="zotero-archive-palette"/>
+      <menulist id="zotero-archive-palette" preference="extensions.zotero.zoteroArchive.palette">
+        <menupopup>
+          <menuitem value="normal" data-l10n-id="zotero-archive-prefs-palette-normal"/>
+          <menuitem value="colorblind" data-l10n-id="zotero-archive-prefs-palette-colorblind"/>
+        </menupopup>
+      </menulist>
+    </hbox>
+    <description class="zotero-archive-hint" data-l10n-id="zotero-archive-prefs-palette-hint" style="max-width: 60em"/>
+
+    <hbox align="center" style="margin-top: 8px">
       <label data-l10n-id="zotero-archive-prefs-label-model" control="zotero-archive-label-model"/>
       <html:input id="zotero-archive-label-model" type="text" style="flex: 1; max-width: 28em"
                   preference="extensions.zotero.zoteroArchive.labelModel"/>

@@ -96,6 +96,12 @@ function prepare() {
     "extensions.zotero.zoteroArchive.devOpenExport": option("--open-export") || "",
     // --open-dropdown: open the library menu as soon as the window appears (to check its rendering).
     "extensions.zotero.zoteroArchive.devOpenDropdown": argv.includes("--open-dropdown"),
+    // --themes N, --subthemes N, --refit: preset the toolbar.
+    ...(option("--themes") ? { "extensions.zotero.zoteroArchive.themes": Number(option("--themes")) } : {}),
+    ...(option("--subthemes") ? { "extensions.zotero.zoteroArchive.subthemes": Number(option("--subthemes")) } : {}),
+    "extensions.zotero.zoteroArchive.devRefit": argv.includes("--refit"),
+    // --palette normal|colorblind: the colours of the themes.
+    ...(option("--palette") ? { "extensions.zotero.zoteroArchive.palette": option("--palette") } : {}),
     // --engine local|ollama: which embedding engine the window uses.
     ...(option("--engine") ? { "extensions.zotero.zoteroArchive.embedEngine": option("--engine") } : {}),
     "extensions.zotero.debug.log": false,

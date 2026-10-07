@@ -7,5 +7,6 @@ pref("extensions.zotero.zoteroArchive.localModel", "Xenova/paraphrase-multilingu
 pref("extensions.zotero.zoteroArchive.labelModel", "");
 pref("extensions.zotero.zoteroArchive.labelLanguage", "");
 pref("extensions.zotero.zoteroArchive.themes", 8);
+pref("extensions.zotero.zoteroArchive.palette", "normal");
 pref("extensions.zotero.zoteroArchive.subthemes", 40);
 pref("extensions.zotero.zoteroArchive.bulkThreshold", 100);

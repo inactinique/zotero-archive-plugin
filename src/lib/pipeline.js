@@ -6,7 +6,7 @@ import { autoLabel } from "./themes.js";
 import * as labelling from "./labels.js";
 import { DEFAULT_URL } from "./ollama.js";
 
-export const MAX_THEMES = 8; // the palette cannot tell more than eight hues apart reliably
+export const MAX_THEMES = 20; // as many colours as the palettes provide (src/lib/palette.js)
 export const MIN_ITEMS = 60;
 export const PROJECT_URL = "https://github.com/inactinique/zotero-archive-plugin";
 export const PAGE_LANGUAGES = ["fr", "en"];
